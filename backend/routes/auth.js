@@ -3,6 +3,8 @@ const { body, validationResult } = require('express-validator');
 const router = express.Router();
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 
 // Create a user by POST : /api/auth/createuser  No login required
@@ -37,10 +39,19 @@ router.post('/createuser', [
             password : secretPass
         });
         
-        res.json(user);
+        // data in jwt payload, ie user_id
+        const data = {
+            user:{
+                id : user.id
+            }
+        }
+
+        const authtoken = jwt.sign(data, process.env.JWT_SECRET);
+
+        res.json({authtoken});
 
     } catch(err){
-        console.error(error.message);
+        console.error(err.message);
         res.status(500).send("Some Error Occured!");
     }
 });
