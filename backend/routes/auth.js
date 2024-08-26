@@ -47,13 +47,63 @@ router.post('/createuser', [
         }
 
         const authtoken = jwt.sign(data, process.env.JWT_SECRET);
-
+        
+        // send auth token as response
         res.json({authtoken});
 
     } catch(err){
         console.error(err.message);
-        res.status(500).send("Some Error Occured!");
+        res.status(500).send("Internal Server error!");
     }
+});
+
+// Authenticate a user , by POST : /api/auth/login  No login required
+router.post('/login', [
+    body('email', 'Must be a valid email').isEmail(),
+    body('password', 'Password must be at least 3 characters long').isLength({ min: 3 }),
+  ], async (req,res,next) => {
+
+    // If there are errors, return them
+    const result = validationResult(req);
+    if (!result.isEmpty()) {
+        return res.status(400).json({ errors: result.array() });
+    }
+
+    try {
+        
+        const { email,password } = req.body;
+        //find user
+        let user = await User.findOne({email});
+        //if it doesnt exists
+        if(!user) {
+            return res.status(400).json({error : "Try Again!"});
+        }
+
+        //compare password with bcrypt.compare
+        const passCompare = await bcrypt.compare(password, user.password);
+
+        //if passwords do not match
+        if(!passCompare){
+            return res.status(400).json({error : "Try Again!"});
+        }
+
+        // If they match, just sign jwt token and send it.
+        const data = {
+            user:{
+                id : user.id
+            }
+        }
+
+        const authtoken = jwt.sign(data, process.env.JWT_SECRET);
+        
+        // send auth token as response
+        res.json({authtoken});
+
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send("Internal Server error!");
+    }
+
 });
 
 module.exports = router;
