@@ -9,7 +9,9 @@ app.use(express.json());
 
 // Available Routes
 const authRoutes = require('./routes/auth');
+const notesRoutes = require('./routes/notes');
 app.use('/api/auth', authRoutes);
+app.use('/api/notes', notesRoutes);
 
 app.listen(port, () => {
     connectToMongo();
